@@ -7,6 +7,6 @@ export type PathItemObject =
 export type ObjectMap<T> = { [key: string]: T };
 
 export type RefactoredObject<T> = {
-  result: T;
+  result: any;
   references: Map<string, any>;
 };
