@@ -35,6 +35,8 @@ if (!commander_1.default.join) {
     // By default, split file
     const refactorer = new refactorer_1.OpenApiRefactorer(commander_1.default.input, commander_1.default.output);
     const refactoredApiDoc = refactorer.refactor();
+    util_1.writeDataFile(`${path_1.dirname(commander_1.default.output)}/definitions/index${path_1.extname(commander_1.default.output)}`, { swagger: "2.0", definitions: refactoredApiDoc.result.definitions });
+    refactoredApiDoc.result.definitions = { $ref: 'definitions/index.yaml#/definitions' };
     util_1.writeDataFile(commander_1.default.output, refactoredApiDoc.result);
     util_1.writeTree(refactoredApiDoc.references, path_1.dirname(commander_1.default.output), path_1.extname(commander_1.default.output));
 }
