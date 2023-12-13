@@ -44,17 +44,21 @@ export class OpenApiRefactorer {
     for (const [path, obj] of Object.entries(pathsObject)) {
       const pathStr = path.replace(/(^\/|\/$)/g, '').replace(/\//g, '-'); // remove heading slash
       const pathStrRef = pathStr.split('-');
+      const pathKey = pathStr;
+      const yamlNamePath = `${pathStrRef[0]}/${pathStrRef[1]}`
+      // const pathKey = path;
+      // const yamlNamePath = (obj.get||obj.post).tags[0]
       const relativeSubPath =
-        `${relativePath}/${pathStrRef[0]}/${pathStrRef[1]}${this.outputExtension}`
+        `${relativePath}/${yamlNamePath}${this.outputExtension}`
 
       // the relative path of the output root starting from the `relativeSubPath`
       const relativeBackwardPath =
         backwardsPath(dirname(relativeSubPath));
-      pathStrObj[`${pathStrRef[0]}/${pathStrRef[1]}`] = pathStrObj[`${pathStrRef[0]}/${pathStrRef[1]}`] || {swagger:"2.0",paths:{}}
-      pathStrObj[`${pathStrRef[0]}/${pathStrRef[1]}`]['paths'][pathStr] = this.updateReferences(obj, relativeBackwardPath);
-      paths.set(`${pathStrRef[0]}/${pathStrRef[1]}`, pathStrObj[`${pathStrRef[0]}/${pathStrRef[1]}`]);
+      pathStrObj[`${yamlNamePath}`] = pathStrObj[`${yamlNamePath}`] || {swagger:"2.0",paths:{}}
+      pathStrObj[`${yamlNamePath}`]['paths'][pathKey] = this.updateReferences(obj, relativeBackwardPath);
+      paths.set(`${yamlNamePath}`, pathStrObj[`${yamlNamePath}`]);
       newPathObject[path] = {
-        $ref: fromFileSystemPath(relativeSubPath) + '#/paths/' + pathStr,
+        $ref: fromFileSystemPath(relativeSubPath) + '#/paths/' + encodeURIComponent(pathKey),
       };
     }
 
