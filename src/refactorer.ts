@@ -22,7 +22,15 @@ export class OpenApiRefactorer {
    */
   refactor(): RefactoredObject<OpenAPI.Document> {
     const newApiDoc = clone(this.apiDoc);
-
+    for(let pathsKey in this.apiDoc.paths){
+      for(let methodKey in this.apiDoc.paths[pathsKey]){
+        this.apiDoc.paths[pathsKey][methodKey].security = [
+          {
+            "Authorization": []
+          },
+        ]
+      } 
+    }
     const refactoredPaths = this.refactorPathObject(this.apiDoc.paths, 'paths');
 
     newApiDoc.paths = refactoredPaths.result;
@@ -44,7 +52,7 @@ export class OpenApiRefactorer {
     for (const [path, obj] of Object.entries(pathsObject)) {
       const pathStr = path.replace(/(^\/|\/$)/g, '').replace(/\//g, '-'); // remove heading slash
       const pathStrRef = pathStr.split('-');
-      const pathKey = pathStr;
+      const pathKey = path;
       const yamlNamePath = `${pathStrRef[0]}/${pathStrRef[1]}`
       // const pathKey = path;
       // const yamlNamePath = (obj.get||obj.post).tags[0]
@@ -54,7 +62,22 @@ export class OpenApiRefactorer {
       // the relative path of the output root starting from the `relativeSubPath`
       const relativeBackwardPath =
         backwardsPath(dirname(relativeSubPath));
-      pathStrObj[`${yamlNamePath}`] = pathStrObj[`${yamlNamePath}`] || {swagger:"2.0",paths:{}}
+      pathStrObj[`${yamlNamePath}`] = pathStrObj[`${yamlNamePath}`] || {
+        openapi: '3.0.1',
+        info: {
+          title: 'DXN',
+          version: '3.0',
+        },
+        paths:{},
+        components: {
+          securitySchemes: {
+            Authorization: {
+              type: "http",
+              scheme: "bearer"
+            },
+          }
+        }
+      }
       pathStrObj[`${yamlNamePath}`]['paths'][pathKey] = this.updateReferences(obj, relativeBackwardPath);
       paths.set(`${yamlNamePath}`, pathStrObj[`${yamlNamePath}`]);
       newPathObject[path] = {
@@ -71,11 +94,12 @@ export class OpenApiRefactorer {
       console.log(v)
       const vString = v.toString()
       const vSplit = vString.split('/')
-      if(vSplit[1] === 'definitions'){
-        return relativePath + '/definitions/index.yaml' + v
+      if(vSplit[1] === 'components'&&vSplit[2] === 'schemas'){
+        return relativePath + `/components/schemas.yaml` + v
       }else{
         return relativePath + '/' + this.outputFile + v
       }
+      // return relativePath + '/' + this.outputFile + v
     }, isRef);
   }
 }

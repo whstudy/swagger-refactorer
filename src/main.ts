@@ -48,8 +48,18 @@ if (!program.join) {
   // By default, split file
   const refactorer = new OpenApiRefactorer(program.input, program.output);
   const refactoredApiDoc = refactorer.refactor();
-  writeDataFile(`${dirname(program.output)}/definitions/index${extname(program.output)}`, {swagger: "2.0", definitions: refactoredApiDoc.result.definitions});
-  refactoredApiDoc.result.definitions = {$ref: 'definitions/index.yaml#/definitions'}
+  writeDataFile(`${dirname(program.output)}/components/schemas${extname(program.output)}`, {
+    openapi: '3.0.1',
+    info: {
+      title: 'DXN',
+      version: '3.0',
+    },
+    components: {
+      schemas: refactoredApiDoc.result.components.schemas
+    }
+  });
+  // refactoredApiDoc.result.definitions = {$ref: 'components/schemas.yaml#/definitions'}
+  delete refactoredApiDoc.result.components.schemas
   writeDataFile(program.output, refactoredApiDoc.result);
   writeTree(refactoredApiDoc.references, dirname(program.output), extname(
     program.output
